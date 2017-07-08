@@ -1,0 +1,4 @@
+app:
+  image: mcipri/token-manager
+  ports:
+   - "49160:8080"
