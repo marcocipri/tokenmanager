@@ -5,7 +5,7 @@ var os = require("os");
 var assert = require('assert');
 var crypto = require('crypto');
 var bodyParser = require('body-parser');
-var consul = require('consul')({ host: '192.168.99.100' });
+var consul = require('consul')({ host: process.env.confserver });
 
 // retrieve the hostname
 var hostname = os.hostname();
@@ -95,6 +95,19 @@ app.post("/generate", function(req, res) {
 });
 
 
+// service registration
+
+
+var check = {
+    id: hostname,
+    name: hostname,
+    ttl: '15s',
+    notes: 'This is an example check.',
+};
+
+consul.agent.check.register(check, function(err) {
+    if (err) throw err;
+});
 
 // update the encrypt key every 10 secs.
 
