@@ -94,27 +94,21 @@ app.post("/generate", function(req, res) {
 
 });
 
+// extend with the proper healt test
 
-// service registration
-
-
-var check = {
-    id: hostname,
-    name: hostname,
-    ttl: '15s',
-    notes: 'This is an example check.',
-};
-
-consul.agent.check.register(check, function(err) {
-    if (err) throw err;
+app.get("/healt", function(req, res) {
+    console.log(' get healt request ');
+    return res.send("OK");
 });
+
+
 
 // update the encrypt key every 10 secs.
 
 function confUpdate(arg) {
     try {
         consul.kv.get('environment/test/token/encrypt-key', function(err, _remoteKey) {
-            if (err) console.log(' err ' + err);;
+            if (err) console.log(' err ' + err);
             if (_remoteKey == null) {
                 remoteKey = "";
                 reloadTime = 10000;
@@ -133,5 +127,31 @@ function confUpdate(arg) {
 
 confUpdate('');
 
+
+var service = {
+    name: 'tokenmanager',
+    id: 'tokenmanager_' + process.env.serviceip,
+    address: process.env.serviceip,
+    port: parseInt(process.env.serviceport),
+    check: {
+        deregister_critical_service_after: process.env.deregister_after,
+        HTTP: "http://" + process.env.serviceip + ":" + process.env.serviceport + "/healt/",
+        interval: "10s",
+        name: "HTTP tokenmanager healt check for " + hostname,
+        tls_skip_verify: false,
+        method: "GET",
+        header: { "x-foo": ["bar", "baz"] },
+        timeout: "1s"
+    }
+};
+
+// registration of the service check
+consul.agent.service.register(service, function(err) {
+    if (err) {
+        console.log(' err ' + err);
+        console.log("Session: %j", service)
+    }
+});
+
 app.listen(PORT, HOST);
-console.log('Running on http://' + HOST + ':' + PORT);
+console.log('Running on http://' + HOST + ':' + PORT + ' : ' + process.env.confserver + ' : ' + process.env.serviceip);
