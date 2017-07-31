@@ -107,9 +107,12 @@ app.get("/healt", function(req, res) {
 
 function confUpdate(arg) {
     try {
-        consul.kv.get('environment/test/token/encrypt-key', function(err, _remoteKey) {
+        console.log('confUpdate');
+        consul.kv.get(process.env.confurl, function(err, _remoteKey) {
             if (err) console.log(' err ' + err);
             if (_remoteKey == null) {
+                console.log(' remoteKey null ' + _remoteKey);
+
                 remoteKey = "";
                 reloadTime = 10000;
             } else {
